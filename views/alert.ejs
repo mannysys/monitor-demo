@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/jquery.min.js"></script>
+  </head>
+  </head>
+  <body>
+
+  <h1>CPU和内存实时监控</h1>
+
+  <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+
+  <script src="javascripts/highcharts/highcharts.js"></script>
+  <script src="javascripts/highcharts/modules/exporting.js"></script>
+  <script>
+    var monitor = function(ip){
+      Highcharts.setOptions({
+        global: {
+          useUTC: false
+        }
+      });
+
+      $('#container').highcharts({
+        chart: {
+          type: 'spline',
+          animation: Highcharts.svg,
+          marginRight: 10
+        },
+        title: {
+          text: 'System Monitor'
+        },
+        credits : {
+          href:'127.0.0.1:3000',
+          position: {
+            x:-30,
+            y:-30
+          },
+          style:{
+            color:'#191a37',
+            fontWeight:'bold'
+          },
+          text:'127.0.0.1:3000'
+        },
+        xAxis: {
+          maxPadding : 0.05,
+          minPadding : 0.05,
+          type: 'datetime',
+          tickWidth:5
+        },
+        yAxis: {
+          title: {
+            text: 'Percent(%)'
+          },
+          plotLines: [{
+            value: 0,
+            width: 1,
+            color: '#808080'
+          }]
+        },
+        tooltip: {
+          formatter: function() {
+            return '<b>'+ this.series.name +'</b>('+num+')<br/>'+
+                    Highcharts.dateFormat('%H:%M:%S', this.x) +'<br/>'+
+                    Highcharts.numberFormat(this.y, 2);
+          }
+        },
+        legend: {
+          enabled: true
+        },
+        exporting: {
+          enabled: false
+        },
+        series: [{
+          name: 'CPU',
+          data: [
+            [(new Date()).getTime(),0]
+          ]
+        },{
+          name: 'Memory',
+          data: (function() {
+            var data = [];
+            data.push([(new Date()).getTime(),0]);
+            return data;
+          })()
+        }]
+      });
+
+
+      var num = 0;
+      var socket = io(ip);
+      socket.on('system', function (data) {
+        var x = data.time;
+        var y1 = data.cpu;
+        var y2= data.mem;
+        console.log("time:"+x+",CPU:"+y1+",Memory:"+y2);
+
+
+        var chart = $('#container').highcharts();
+        chart.series[0].addPoint([x, y1], true, (++num>120?true:false));
+        chart.series[1].addPoint([x, y2], true, (num>120?true:false));
+      });
+    }
+
+
+    $(function(){
+      monitor('localhost:3000');
+    });
+
+  </script>
+  </body>
+</html>
