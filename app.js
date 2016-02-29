@@ -12,6 +12,7 @@ var worker = require('child_process');
 
 
 
+//计算cpu和内存的使用率
 var sysstat = function(callback){
   //cpu当前使用率
   var cpu ="sar -u 1 1 | grep Average | awk '{print $8}'";
